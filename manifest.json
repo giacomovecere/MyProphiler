@@ -1,0 +1,60 @@
+{
+	"name": 		"JSProphiler",
+	"version":		"1.0",
+	"description":		"Prophiler of the pages",
+	"manifest_version":	2,
+	"page_action": {
+		"default_icon":	"images/icon.jpg"
+	},
+	"permissions": [
+		"tabs",
+		"storage",
+		"alarms",
+		"debugger",
+		"webRequest",
+		"webRequestBlocking",
+		"*://*/*"
+	],
+	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+	"background": {
+		"persistent":	true,
+		"scripts": [
+			"jquery.js",
+			"background.js"
+		]
+	},
+	"content_scripts": [
+		{
+			"matches": ["<all_urls>"],
+			"js": [
+				"Function_overrider/DOMSnitch.js",
+				"Function_overrider/Loader.js",
+				"Function_overrider/StartHeuristics.js"
+			],
+			"run_at": "document_start",
+			"all_frames": true
+		},
+		{
+			"matches": ["<all_urls>"],
+			"js": [
+				"jquery.js",
+				"JSHeuristics.js",
+				"TreeGen.js",
+				"utils.js",
+				"ast.js",
+				"parse.js",
+				//"HTMLHeuristics.js",
+				"JSFeatureExtractor.js",
+				//"HTMLFeatureExtractor.js",
+				"JSTracer.js"
+				//"main.js"
+			      ],
+			"all_frames":	true
+		}
+	],
+	"web_accessible_resources":[
+		"Function_overrider/overrides.js"
+	]
+}
+		
+
