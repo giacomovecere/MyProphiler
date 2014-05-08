@@ -2022,7 +2022,8 @@
 		type = type.toString();
 		traces_type.push(type);
 
-		code = code.toString();
+		if((type != "escape") && (type != "unescape"));
+			code = code.toString();
 		traces_code.push(code);
 
 		console.log("Type: " + traces_type[traces_type.length - 1] + " Code: " + traces_code[traces_code.length - 1].toString());
@@ -2030,6 +2031,82 @@
 		traces_href.push(href);
 	};
 
+	/*
+	 * Module from "DOMSnitch" project overriding "dangerous" functions
+	 * of the "Element" object
+	 */
+	/*DOMSnitch.Modules.array = function(parent) {
+	  	this._parent = parent;
+	  	this._targets = {
+	    		"array.push": {
+	      			capture: true,
+	      			funcName: "push", 
+	      			obj: array, 
+			      	origPtr: array.push
+	    		},
+	    		"document.writeln": {
+	      			obj: document, 
+	      			funcName: "writeln", 
+	      			origPtr: document.writeln,
+	      			capture: true
+	    		},
+			"document.createElement": {
+				obj: document,
+				funcName: "createElement",
+				origPtr: document.createElement,
+				capture: true
+			}
+	  	};
+	  	this._loaded = false;
+	};
+	
+	DOMSnitch.Modules.array.prototype = new DOMSnitch.Modules.Base;
+	
+	DOMSnitch.Modules.array.prototype._generalElHandle = function(targetName, mex) {
+	  	var target = this._targets[targetName];
+	  	return function() {
+			makeMessage(mex, arguments[0], window.location.href);
+
+			console.log("arraypush" + " " + arguments.length + " " + arguments[0]);
+	    		if(isMalicious(arguments[0])){ //FIXME: problems with mixed HTML and JS
+				console.log('malicious argument');
+				throw 'malicious!'; // don't execute the malicious code
+				return null;
+			}
+			else{
+				console.log('benign argument');
+			}
+			//checkForNewScripts();
+	    	
+			//return null;
+			return target.origPtr.apply(this, arguments); // everything fine, calling the actual write or writeln
+	  	};
+	};
+
+	DOMSnitch.Modules.Document.prototype._createElement = function(targetName) {
+		var target = this._targets[targetName];
+		return function(data){
+			console.log("Create Element: " + arguments.length + arguments[0]);
+			return target.origPtr.apply(this, arguments);
+		};
+	};
+	
+	DOMSnitch.Modules.array.prototype.load = function() {
+	  	this.config = this._parent.config;
+	  
+	  	if(this._loaded) {
+	    		return;
+	  	}
+	  
+	  	this._overloadMethod("array.push", "array.push", this._generalElHandle("array.push", "push"));
+	  	//this._overloadMethod("document.writeln", "doc.write", this._documentWrite("document.writeln"));
+		//this._overloadMethod("document.createElement", "doc.write", this._createElement("document.createElement"));
+	  	//this._overloadProperty("document.createElement", "doc.write");
+		this._loaded = true;
+	};
+*/	
+	
+	/*
 	/*
 	 * Module from "DOMSnitch" project overriding "dangerous" functions
 	 * of the "document" object (write and writeln)
@@ -2048,14 +2125,20 @@
 	      			funcName: "writeln", 
 	      			origPtr: document.writeln,
 	      			capture: true
-	    		}
+	    		},
+			"document.createElement": {
+				obj: document,
+				funcName: "createElement",
+				origPtr: document.createElement,
+				capture: true
+			}
 	  	};
 	  	this._loaded = false;
 	};
 	
 	DOMSnitch.Modules.Document.prototype = new DOMSnitch.Modules.Base;
 	
-	DOMSnitch.Modules.Document.prototype._createDocumentWrite = function(targetName) {
+	DOMSnitch.Modules.Document.prototype._documentWrite = function(targetName) {
 	  	var target = this._targets[targetName];
 	  	return function(data) {
 			makeMessage("docwrite", arguments[0], window.location.href);
@@ -2075,6 +2158,14 @@
 			return target.origPtr.apply(this, arguments); // everything fine, calling the actual write or writeln
 	  	};
 	};
+
+	DOMSnitch.Modules.Document.prototype._createElement = function(targetName) {
+		var target = this._targets[targetName];
+		return function(data){
+			console.log("Create Element: " + arguments.length + arguments[0]);
+			return target.origPtr.apply(this, arguments);
+		};
+	};
 	
 	DOMSnitch.Modules.Document.prototype.load = function() {
 	  	this.config = this._parent.config;
@@ -2083,9 +2174,11 @@
 	    		return;
 	  	}
 	  
-	  	this._overloadMethod("document.write", "doc.write", this._createDocumentWrite("document.write"));
-	  	this._overloadMethod("document.writeln", "doc.write", this._createDocumentWrite("document.writeln"));
-	  	this._loaded = true;
+	  	this._overloadMethod("document.write", "doc.write", this._documentWrite("document.write"));
+	  	this._overloadMethod("document.writeln", "doc.write", this._documentWrite("document.writeln"));
+		this._overloadMethod("document.createElement", "doc.write", this._createElement("document.createElement"));
+	  	//this._overloadProperty("document.createElement", "doc.write");
+		this._loaded = true;
 	};
 	
 	
@@ -2108,6 +2201,60 @@
 	      			obj: window, 
 	      			origPtr: window.setTimeout
 	    		},
+	    		"window.escape": {
+	      			capture: true,
+	      			funcName: "escape", 
+	      			obj: window, 
+	      			origPtr: window.escape
+	    		},
+	    		"window.unescape": {
+	      			capture: true,
+	      			funcName: "unescape", 
+	      			obj: window, 
+	      			origPtr: window.unescape
+	    		},
+	    		"window.decodeURI": {
+	      			capture: true,
+	      			funcName: "decodeURI", 
+	      			obj: window, 
+	      			origPtr: window.decodeURI
+	    		},
+	    		"window.decodeURIComponent": {
+	      			capture: true,
+	      			funcName: "decodeURIComponent", 
+	      			obj: window, 
+	      			origPtr: window.decodeURIComponent
+	    		},
+	    		"window.encodeURI": {
+	      			capture: true,
+	      			funcName: "encodeURI", 
+	      			obj: window, 
+	      			origPtr: window.encodeURI
+	    		},
+	    		"window.encodeURIComponent": {
+	      			capture: true,
+	      			funcName: "encodeURIComponent", 
+	      			obj: window, 
+	      			origPtr: window.encodeURIComponent
+	    		},
+	    		"window.atob": {
+	      			capture: true,
+	      			funcName: "atob", 
+	      			obj: window, 
+	      			origPtr: window.atob
+	    		},
+	    		"window.btoa": {
+	      			capture: true,
+	      			funcName: "btoa", 
+	      			obj: window, 
+	      			origPtr: window.btoa
+	    		},
+	    		"window.string": {
+	      			capture: true,
+	      			funcName: "string", 
+	      			obj: window, 
+	      			origPtr: window.string
+	    		},
 			"window.setInterval": {
 		  		capture: true,
 		  		funcName: "setInterval", 
@@ -2120,60 +2267,15 @@
 	
 	DOMSnitch.Modules.Window.prototype = new DOMSnitch.Modules.Base;
 	
-	DOMSnitch.Modules.Window.prototype._createEval = function() {
-	  	var target = this._targets["window.eval"];
+	DOMSnitch.Modules.Window.prototype._generalHandle = function(targ, mex) {
+	  	var target = this._targets[targ];
 	  	return function() {
-			//console.log("eval: " + arguments.length + " " + arguments[0]);
-			makeMessage("eval", arguments[0], location.href);
-	    		/***if(isMalicious(arguments[0])){
-	    			revolver_malicious = true;
-				console.log('malicious argument');
-				alert("This page contains malicious code!!");
-				location.href = "about:blank";
-				return null;
-			}*/
-	    		//checkForNewScripts();
-	    		return target.origPtr.apply(this, arguments); // everything fine, calling the actual eval
-	  	};
-	};
-	
-	DOMSnitch.Modules.Window.prototype._createSetTimeout = function() {
-	  	var target = this._targets["window.setTimeout"];
-	  	return function() {
-			makeMessage("setTimeout", arguments[0], window.location.href);
-			//setTimeout: I get the function to call
-			//console.log("Check SetTimeout()" + arguments.length + arguments[0]);
-
-		    	/***if(isMalicious(arguments[0])){
-			    	revolver_malicious = true;
-				console.log('malicious argument');
-				alert("This page contains malicious code!!");
-				location.href = "about:blank";
-				return null; // don't execute the malicious code
-			}
-	  	  	checkForNewScripts();*/
-	    		return target.origPtr.apply(this, arguments); // everything fine, calling the actual setTimeout
-	  	};
-	};
-		
-	DOMSnitch.Modules.Window.prototype._createSetInterval = function() {
-	  	var target = this._targets["window.setInterval"];
-	  	return function() {
-			makeMessage("setInterval", arguments[0], window.location.href);
-			//setInterval: I get the function to call
-			//console.log("Check SetInterval" + arguments.length + arguments[0]);
-		    	/***if(isMalicious(arguments[0])){
-			    	revolver_malicious = true;
-				console.log('malicious argument');
-				alert("This page contains malicious code!!");
-				location.href = "about:blank";
-				return null; // don't execute the malicious code
-			}
-		    	checkForNewScripts();*/
-	    		// everything fine, calling the actual setIntervao
+			makeMessage(mex, arguments[0], window.location.href);
+			
 			return target.origPtr.apply(this, arguments); 
 	  	};
 	};
+	
 	
 	DOMSnitch.Modules.Window.prototype.load = function() {
 	  	this.config = this._parent.config;
@@ -2183,11 +2285,21 @@
 	  	/* FIXME: there are scope problems when overriding eval.
 	   	* The problem is reproducible uncommenting the next line of code and visiting
 	   	* Google Maps (the map is stuck. Console reports "s is undefined")
+		* [look at the documentation of DOMSnitch]
 	   	*/
-	  	this._overloadMethod("window.eval", "win.eval", this._createEval());
-	  	this._overloadMethod("window.setTimeout", "win.setTimeout", this._createSetTimeout());
-	  	this._overloadMethod("window.setInterval", "win.setInterval", this._createSetInterval());
-	  	this._loaded = true;
+	  	this._overloadMethod("window.eval", "win.eval", this._generalHandle("window.eval", "eval"));//this._eval());
+	  	this._overloadMethod("window.setTimeout", "win.setTimeout", this._generalHandle("window.setTimeout", "setTimeout"));
+	  	this._overloadMethod("window.setInterval", "win.setInterval", this._generalHandle("window.setInterval", "setInterval"));
+	  	this._overloadMethod("window.escape", "win.escape", this._generalHandle("window.escape", "escape"));
+	  	this._overloadMethod("window.unescape", "win.unescape", this._generalHandle("window.unescape", "unescape"));
+	  	this._overloadMethod("window.decodeURI", "win.decodeURI", this._generalHandle("window.decodeURI", "decodeURI"));
+	  	this._overloadMethod("window.decodeURIComponent", "win.decodeURIComponent", this._generalHandle("window.decodeURIComponent", "decodeURIComponent"));
+	  	this._overloadMethod("window.encodeURI", "win.encodeURI", this._generalHandle("window.encodeURI", "encodeURI"));
+	  	this._overloadMethod("window.encodeURIComponent", "win.encodeURIComponent", this._generalHandle("window.encodeURIComponent", "encodeURIComponent"));
+	  	this._overloadMethod("window.atob", "win.atob", this._generalHandle("window.atob", "atob"));
+	  	this._overloadMethod("window.btoa", "win.btoa", this._generalHandle("window.btoa", "btoa"));
+	  	this._overloadMethod("window.string", "win.string", this._generalHandle("window.string", "string"));
+		this._loaded = true;
 	};
 //})();
 	

@@ -15,47 +15,47 @@ if(typeof already_injected === "undefined"){
 	window.USE_DEBUG = true;
 	
 	DOMSnitch.Loader = function() {
-	  this._modules = {};
-	  this._codeBuff = [];
+	  	this._modules = {};
+	  	this._codeBuff = [];
 	};
 	
 	DOMSnitch.Loader.prototype = {
-	  _loadCode: function(jscode) {
-	    this._codeBuff.push(jscode);
-	    if(document.documentElement) {
-	      var scriptElem = document.createElement("script");
-	      scriptElem.textContent = this._codeBuff;
-	      this._codeBuff = [];
-	      document.documentElement.appendChild(scriptElem);
-	      document.documentElement.removeChild(scriptElem);
-	    } 
-		else {
-	      window.setTimeout(this._loadCode.bind(this, ""), 0);
-	    }
-	  },
+	  	_loadCode: function(jscode) {
+	    		this._codeBuff.push(jscode);
+	    		if(document.documentElement) {
+	      			var scriptElem = document.createElement("script");
+	      			scriptElem.textContent = this._codeBuff;
+	      			this._codeBuff = [];
+	      			document.documentElement.appendChild(scriptElem);
+	      			document.documentElement.removeChild(scriptElem);
+	    		}	 
+			else {
+	      			window.setTimeout(this._loadCode.bind(this, ""), 0);
+	    		}
+	  	},
 	  
-	  load: function() {
-	    this._loadCode("if(!window.snitch) { snitch = new DOMSnitch({})} else { snitch.loadModules()}");
-	  },
+	  	load: function() {
+	    		this._loadCode("if(!window.snitch) { snitch = new DOMSnitch({})} else { snitch.loadModules()}");
+	  	},
 	  
-	  loadModule: function(moduleName, moduleSource) {
-	    if(window.DIR_PATH) {
-	      moduleSource = window.DIR_PATH + moduleSource;
-	    }
-	    var xhr = new XMLHttpRequest;
-	    var moduleUrl = chrome.extension.getURL(moduleSource);
-	    xhr.open("GET", moduleUrl, false);
-	    xhr.send();
-	    var replace_string = "(function(){var signatures = "+"";
-	    var jscode = xhr.responseText.replace("(function(){", replace_string);
-	    this._loadCode(jscode);
-	  },
+	  	loadModule: function(moduleName, moduleSource) {
+	    		if(window.DIR_PATH) {
+	      			moduleSource = window.DIR_PATH + moduleSource;
+	    		}
+	    		var xhr = new XMLHttpRequest;
+	    		var moduleUrl = chrome.extension.getURL(moduleSource);
+	    		xhr.open("GET", moduleUrl, false);
+	    		xhr.send();
+	    		var replace_string = "(function(){var signatures = "+"";
+	    		var jscode = xhr.responseText.replace("(function(){", replace_string);
+	    		this._loadCode(jscode);
+	  	},
 	  
-	  loadAll: function(){
-		  this._loadCode(DOMSnicth_module);
-		  this._loadCode(Base_module);
-		  //this._loadCode2(overrides_module);//TODO this must add signatures dynamically into the module, like I do in loadModule now
-		  this.loadModule("overrides","Function_overrider/overrides.js");
-	  }
+	  	loadAll: function(){
+		  	this._loadCode(DOMSnicth_module);
+		  	this._loadCode(Base_module);
+		  	//this._loadCode2(overrides_module);//TODO this must add signatures dynamically into the module, like I do in loadModule now
+		 	this.loadModule("overrides","Function_overrider/overrides.js");
+	  	}
 	};
 }
